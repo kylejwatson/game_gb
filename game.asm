@@ -108,17 +108,32 @@ code_begins:
 	; see where we declare "copyright" as a sprite-variable above
 
 	; set X=20, Y=10, Tile=$19, Flags=0
-	PutSpriteXAddr	copyright, 20
+	PutSpriteXAddr	copyright, 10
 	PutSpriteYAddr	copyright, 100
 	sprite_PutTile	copyright, 1
 	sprite_PutFlags	copyright, $00
+
+	
+;get background tile at coord
+GetBackgroundTile:	MACRO
+	; divide b by 8
+    ; srl     b shift right
+    ; srl     b
+    ; srl     b
+	ld	a,[_MAP + \1 + \2]
+	ENDM
 
 _MAP = $C000 + 160
 	ld hl, Map
 	ld de, _MAP
 	ld bc, MAP_LENGTH
 	call mem_Copy
-_WRAM = _MAP + MAP_LENGTH
+_TIMES = _MAP + MAP_LENGTH
+	ld hl, Times8
+	ld de, _TIMES
+	ld bc, TIMES_LENGTH
+	call mem_Copy
+_WRAM = _TIMES + TIMES_LENGTH
 
 UP_VEL = _WRAM
 DOWN_VEL = _WRAM+1
@@ -132,13 +147,12 @@ ld [DOWN_VEL], a
 	; so only 60fps. That makes the sprite movement here manageable
 	nop
     call jpad_GetKeys
-    ; ld a, b
 	and PADF_LEFT
 	jr z, .skip_left
     GetSpriteXAddr copyright
     cp 1
     jp nc, .skip_left_scroll
-	ld	a, [rSCX]	; "Scroll-X" search gbhw.inc to learn more
+	ld	a, [rSCX]
 	sub 2
 	ld	[rSCX], a
 	jr .skip_left
@@ -149,17 +163,19 @@ ld [DOWN_VEL], a
 	and PADF_RIGHT
 	jr z, .skip_right
     GetSpriteXAddr copyright
+	; ld b, a
+	; GetBackgroundTile a, 0
+	; cp 4
+	; jp z, .skip_right
     cp 160-8
     jp c, .skip_right_scroll
-	ld	a, [rSCX]	; "Scroll-X" search gbhw.inc to learn more
+	ld	a, [rSCX]
 	add 2
 	ld	[rSCX], a
 	jr .skip_right
 .skip_right_scroll
     MoveRight copyright, 2
 .skip_right
-
-	; ld a, c
 	ld a, [UP_VEL]
 	ld c, a
 	and a
@@ -170,9 +186,10 @@ ld [DOWN_VEL], a
 	ld [UP_VEL], a
 	jp .loop
 .fall_down
+	;check for tile
+
 	ld a, [DOWN_VEL]
 	ld d, a
-	; ld a, d
 	cp 9
 	jr z, .skip_jump
 	MoveDown copyright, d
@@ -183,14 +200,13 @@ ld [DOWN_VEL], a
 .skip_jump
 	ld a, b
 	and PADF_UP
-	jp z, .loop  ; return (do nothing) if left was not pressed
-	; ld c, 8
+	jp z, .loop
 	ld a, 8
 	ld [UP_VEL], a
-	; ld d, 0
 	xor a
 	ld [DOWN_VEL], a
 	jp	.loop		; start up at top of .loop label. Repeats each vblank
+
 
 ; You can turn off LCD at any time, but it's bad for LCD if NOT done at vblank
 lcd_Stop:

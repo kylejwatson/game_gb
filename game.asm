@@ -113,16 +113,6 @@ code_begins:
 	sprite_PutTile	copyright, 1
 	sprite_PutFlags	copyright, $00
 
-	
-;get background tile at coord
-GetBackgroundTile:	MACRO
-	; divide b by 8
-    ; srl     b shift right
-    ; srl     b
-    ; srl     b
-	ld	a,[_MAP + \1 + \2]
-	ENDM
-
 _MAP = $C000 + 160
 	ld hl, Map
 	ld de, _MAP
@@ -134,6 +124,25 @@ _TIMES = _MAP + MAP_LENGTH
 	ld bc, TIMES_LENGTH
 	call mem_Copy
 _WRAM = _TIMES + TIMES_LENGTH
+
+;get background tile at coord
+GetBackgroundTile:	MACRO
+	ld a, \1
+	srl a
+	srl a
+	srl a
+	ld b, \2
+	srl b
+	srl b
+	srl b
+
+	add b
+	ld l, a
+	ld h, 0
+	ld bc, _MAP
+	add hl, bc
+	ld a, [hl]
+	ENDM
 
 UP_VEL = _WRAM
 DOWN_VEL = _WRAM+1
@@ -163,10 +172,11 @@ ld [DOWN_VEL], a
 	and PADF_RIGHT
 	jr z, .skip_right
     GetSpriteXAddr copyright
-	; ld b, a
-	; GetBackgroundTile a, 0
-	; cp 4
-	; jp z, .skip_right
+	ld d, b
+	GetBackgroundTile a, 0
+	cp 4
+	ld b, d
+	jp z, .skip_right
     cp 160-8
     jp c, .skip_right_scroll
 	ld	a, [rSCX]

@@ -8,7 +8,7 @@ include "sprite.inc"		; gives us spr_* macros to modify all sprites
 
 
 include "tiles.z80"
-include "testmap.z80"
+include "map.z80"
 
 ;-------------- INTERRUPT VECTORS ------------------------
 ; specific memory addresses are called when a hardware interrupt triggers

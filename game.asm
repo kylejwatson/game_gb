@@ -1,4 +1,4 @@
-;;FIGURE OUT WHY MAP DOESNT WORK
+;;rgbfix -v -p 0 game.gb
 
 include "gbhw.inc"
 
@@ -173,6 +173,9 @@ ld [DOWN_VEL], a
 	jr z, .skip_right
     GetSpriteXAddr copyright
 	ld d, b
+	ld b, a
+	ld a, [rSCX]
+	add b
 	GetBackgroundTile a, 0
 	cp 4
 	ld b, d
